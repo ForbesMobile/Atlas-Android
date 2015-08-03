@@ -33,6 +33,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
@@ -306,7 +307,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
         this.otherTextTypeface  = otherTextTypefaceName != null ? Typeface.create(otherTextTypefaceName, otherTextStyle) : null;
         //this.otherTextSize = ta.getDimension(R.styleable.AtlasMessageList_theirTextSize, context.getResources().getDimension(R.dimen.atlas_text_size_general));
         
-        this.myBubbleColor  = ta.getColor(R.styleable.AtlasMessageList_myBubbleColor, context.getResources().getColor(R.color.atlas_bubble_blue));
+        this.myBubbleColor  = ta.getColor(R.styleable.AtlasMessageList_myBubbleColor, context.getResources().getColor(R.color.atlas_bubble_gold));
         this.otherBubbleColor = ta.getColor(R.styleable.AtlasMessageList_theirBubbleColor, context.getResources().getColor(R.color.atlas_background_gray));
 
         this.dateTextColor = ta.getColor(R.styleable.AtlasMessageList_dateTextColor, context.getResources().getColor(R.color.atlas_text_gray)); 
@@ -355,7 +356,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     if (debug) Log.w(TAG, "cellForMessage() single-image part found at partNo: " + partNo);
                 }
             
-            } else if (Atlas.MIME_TYPE_ATLAS_LOCATION.equals(part.getMimeType())){
+            } else if (Atlas.MIME_TYPE_ATLAS_LOCATION.equals(part.getMimeType())) {
                 destination.add(new GeoCell(part));
             } else {
                 Cell cellData = new TextCell(part);
@@ -451,7 +452,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
         
         for (Message message : messages) {
             // only our messages
-            if (client.getAuthenticatedUserId().equals(message.getSender().getUserId())){
+            if (client.getAuthenticatedUserId().equals(message.getSender().getUserId())) {
                 if (!message.isSent()) continue;
                 Map<String, RecipientStatus> statuses = message.getRecipientStatus();
                 if (statuses == null || statuses.size() == 0) continue;
@@ -758,7 +759,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
         }
         
         public void schedule(String url, File to, CompleteListener onComplete) {
-            if (inProgress != null && inProgress.url.equals(url)){
+            if (inProgress != null && inProgress.url.equals(url)) {
                 return;
             }
             synchronized (queue) {
@@ -850,7 +851,8 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     text = "attach, type: " + part.getMimeType() + ", size: " + part.getSize();
                 }
             }
-            
+
+            Activity activity = (Activity) cellText.getContext();
             boolean myMessage = client.getAuthenticatedUserId().equals(cell.messagePart.getMessage().getSender().getUserId());
             TextView textMy = (TextView) cellText.findViewById(R.id.atlas_view_messages_convert_text);
             TextView textOther = (TextView) cellText.findViewById(R.id.atlas_view_messages_convert_text_counterparty);
@@ -874,6 +876,8 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                 textMy.setTextColor(myTextColor);
                 //textMy.setTextSize(TypedValue.COMPLEX_UNIT_DIP, myTextSize);
                 textMy.setTypeface(myTextTypeface, myTextStyle);
+
+                activity.registerForContextMenu(textMy);
             } else {
                 textOther.setVisibility(View.VISIBLE);
                 textOther.setText(text);
@@ -891,9 +895,11 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                 }
                 ((GradientDrawable)textOther.getBackground()).setColor(otherBubbleColor);
                 textOther.setTextColor(otherTextColor);
-                //textOther.setTextSize(TypedValue.COMPLEX_UNIT_DIP, otherTextSize);
                 textOther.setTypeface(otherTextTypeface, otherTextStyle);
+
+                activity.registerForContextMenu(textOther);
             }
+
             return cellText;
         }
     }

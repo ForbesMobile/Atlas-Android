@@ -18,7 +18,7 @@
     <color name="atlas_delimeter_gray">#18000000</color>
     <color name="atlas_shape_avatar_gray">#14000000</color>
 
-    <color name="atlas_bubble_blue">#21AAE1</color>
+    <color name="atlas_bubble_gold">#e4a242</color>
 
     <color name="atlas_text_blue">#21AAE1</color>
     <color name="atlas_text_blue_bright">#FF2196F3</color>
@@ -27,7 +27,7 @@
     <color name="atlas_text_black87">#DD000000</color>
     <color name="atlas_text_white">#FFFFFFFF</color>
 
-    <color name="atlas_background_white">#FFFFFFFF</color>
+    <color name="atlas_background_white">#e1e2e3</color>
     <color name="atlas_background_blue">#21AAE1</color>
     <color name="atlas_background_blue_bright">#2196F3</color>
     <color name="atlas_background_blue_dark">#198BB8</color>

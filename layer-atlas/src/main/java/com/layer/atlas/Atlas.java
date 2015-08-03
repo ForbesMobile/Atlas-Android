@@ -125,7 +125,7 @@ public class Atlas {
             for (MessagePart mp : msg.getMessageParts()) {
                 if (MIME_TYPE_TEXT.equals(mp.getMimeType())) {
                     sb.append(new String(mp.getData()));
-                } else if (MIME_TYPE_ATLAS_LOCATION.equals(mp.getMimeType())){
+                } else if (MIME_TYPE_ATLAS_LOCATION.equals(mp.getMimeType())) {
                     sb.append("Attachemnt: Location");
                 } else {
                     sb.append("Attachment: Image");

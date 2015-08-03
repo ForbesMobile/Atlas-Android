@@ -135,7 +135,9 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 
                 Uri convId = conversations.get(position).getId();
                 Conversation conv = layerClient.getConversation(convId);
-                
+                if(conv == null) {
+                    return convertView;
+                }
                 ArrayList<String> allButMe = new ArrayList<String>(conv.getParticipants());
                 allButMe.remove(layerClient.getAuthenticatedUserId());
                 
@@ -190,7 +192,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 if (conv.getLastMessage() != null ) {
                     Message last = conv.getLastMessage();
                     String lastMessageText = Atlas.Tools.toString(last);
-                    
+
+                    // Fix for the typo
+                    if (lastMessageText.contains("Attachemnt")) {
+                        String detail = lastMessageText.substring("Attachemnt".length(), lastMessageText.length());
+                        lastMessageText = "Attachment" + detail;
+                    }
                     textLastMessage.setText(lastMessageText);
                     
                     Date sentAt = last.getSentAt();
@@ -248,7 +255,8 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 return true;
             }
         });
-        
+
+        layerClient.registerEventListener(this);
         // clean everything if deathenticated (client will explode on .getConversation())
         // and rebuilt everything back after successful authentication  
         layerClient.registerAuthenticationListener(new LayerAuthenticationListener() {
@@ -312,6 +320,10 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         }
     }
 
+    public boolean isEmpty() {
+        return conversations.isEmpty();
+    }
+
     private void parseStyle(Context context, AttributeSet attrs, int defStyle) {
         TypedArray ta = context.getTheme().obtainStyledAttributes(attrs, R.styleable.AtlasConversationList, R.attr.AtlasConversationList, defStyle);
         this.titleTextColor = ta.getColor(R.styleable.AtlasConversationList_cellTitleTextColor, context.getResources().getColor(R.color.atlas_text_black));
@@ -362,7 +374,7 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
             timeText = timeFormat.format(sentAt.getTime()); 
         } else if (sentAt.getTime() > yesterMidnight) {
             timeText = "Yesterday";
-        } else if (sentAt.getTime() > weekAgoMidnight){
+        } else if (sentAt.getTime() > weekAgoMidnight) {
             cal.setTime(sentAt);
             timeText = Tools.TIME_WEEKDAYS_NAMES[cal.get(Calendar.DAY_OF_WEEK) - 1];
         } else {
@@ -373,15 +385,16 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
     @Override
     public void onEventMainThread(LayerChangeEvent event) {
-        for (LayerChange change : event.getChanges()) {
-            if (change.getObjectType() == LayerObject.Type.CONVERSATION
-                    || change.getObjectType() == LayerObject.Type.MESSAGE) {
-                updateValues();
-                return;
-            }
-        }
+        updateValues();
+//        for (LayerChange change : event.getChanges()) {
+//            if (change.getObjectType() == LayerObject.Type.CONVERSATION
+//                    || change.getObjectType() == LayerObject.Type.MESSAGE) {
+//                updateValues();
+//                return;
+//            }
+//        }
     }
-    
+
     public ConversationClickListener getClickListener() {
         return clickListener;
     }

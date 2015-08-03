@@ -24,7 +24,7 @@
 
     <!--
          Required to perform connection to server. 
-         If not set LayerClient.connect() doesn't trigger callback
+         If not set LayerClient.connect() doesn't trigger providerCallback
     -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
