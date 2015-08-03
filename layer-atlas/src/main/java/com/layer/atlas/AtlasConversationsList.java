@@ -192,12 +192,6 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 if (conv.getLastMessage() != null ) {
                     Message last = conv.getLastMessage();
                     String lastMessageText = Atlas.Tools.toString(last);
-
-                    // Fix for the typo
-                    if (lastMessageText.contains("Attachemnt")) {
-                        String detail = lastMessageText.substring("Attachemnt".length(), lastMessageText.length());
-                        lastMessageText = "Attachment" + detail;
-                    }
                     textLastMessage.setText(lastMessageText);
                     
                     Date sentAt = last.getSentAt();
