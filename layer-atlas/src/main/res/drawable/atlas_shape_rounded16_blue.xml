@@ -23,6 +23,6 @@
 		android:bottomLeftRadius="16dp"
 		/>
 	
-	<solid android:color="@color/atlas_bubble_blue"/>
+	<solid android:color="@color/atlas_bubble_gold"/>
 	
 </shape>
