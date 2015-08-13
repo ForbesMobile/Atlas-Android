@@ -47,6 +47,7 @@ import android.widget.TextView;
 
 import com.layer.atlas.Atlas.Participant;
 import com.layer.atlas.Atlas.ParticipantProvider;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -182,8 +183,7 @@ public class AtlasParticipantPicker extends FrameLayout {
 
                 if (entry != null) {
                     name.setText(Atlas.getFullName(entry.participant));
-                    ImageDownloader downloader = new ImageDownloader(imageAvatar);
-                    downloader.execute(entry.participant.getImageUrl());
+                    Picasso.with(getContext()).load(entry.participant.getImageUrl()).into(imageAvatar);
                 } else {
                     name.setText(null);
                 }

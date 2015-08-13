@@ -72,6 +72,7 @@ import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.Message.RecipientStatus;
 import com.layer.sdk.messaging.MessagePart;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -210,8 +211,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     Atlas.Participant participant = participantProvider.getParticipant(userId);
                     String displayText = participant != null ? Atlas.getInitials(participant) : "";
                     imageAvatar.setVisibility(View.VISIBLE);
-                    ImageDownloader downloader = new ImageDownloader(imageAvatar);
-                    downloader.execute(participant.getImageUrl());
+                    Picasso.with(getContext()).load(participant.getImageUrl()).into(imageAvatar);
                 }
                 
                 // mark unsent messages

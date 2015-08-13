@@ -56,6 +56,7 @@ import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.Message.RecipientStatus;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -147,17 +148,17 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 textTitle.setText(conversationTitle);
                 
                 // avatar icons... 
-                ImageView textInitials = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
+                ImageView avatarSingleImage = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
                 View avatarSingle = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single);
                 View avatarMulti = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi);
                 if (allButMe.size() < 2) {
                     String conterpartyUserId = allButMe.get(0);
                     Atlas.Participant participant = participantProvider.getParticipant(conterpartyUserId);
 
-                    ((GradientDrawable) textInitials.getBackground()).setColor(avatarBackgroundColor);
+                    ((GradientDrawable) avatarSingleImage.getBackground()).setColor(avatarBackgroundColor);
                     avatarSingle.setVisibility(View.VISIBLE);
                     avatarMulti.setVisibility(View.GONE);
-                    new ImageDownloader(textInitials).execute(participant.getImageUrl());
+                    Picasso.with(getContext()).load(participant.getImageUrl()).into(avatarSingleImage);
 
                 } else {
                     Participant leftParticipant = null;
@@ -177,8 +178,8 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
                     ImageView textInitialsLeft = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
                     ImageView textInitialsRight = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
-                    new ImageDownloader(textInitialsLeft).execute(leftParticipant.getImageUrl());
-                    new ImageDownloader(textInitialsRight).execute(rightParticipant.getImageUrl());
+                    Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
+                    Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
                     
                     avatarSingle.setVisibility(View.GONE);
                     avatarMulti.setVisibility(View.VISIBLE);
