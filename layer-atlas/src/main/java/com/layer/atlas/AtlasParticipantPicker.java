@@ -41,11 +41,13 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.layer.atlas.Atlas.Participant;
 import com.layer.atlas.Atlas.ParticipantProvider;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -174,22 +176,21 @@ public class AtlasParticipantPicker extends FrameLayout {
                 }
 
                 TextView name = (TextView) convertView.findViewById(R.id.atlas_view_participants_picker_convert_name);
-                TextView avatarText = (TextView) convertView.findViewById(R.id.atlas_view_participants_picker_convert_ava);
+                ImageView imageAvatar = (ImageView) convertView.findViewById(R.id.atlas_view_participants_picker_convert_ava);
+                imageAvatar.setVisibility(View.VISIBLE);
+
                 ParticipantEntry entry = participantsForAdapter.get(position);
 
                 if (entry != null) {
                     name.setText(Atlas.getFullName(entry.participant));
-                    avatarText.setText(Atlas.getInitials(entry.participant));
+                    Picasso.with(getContext()).load(entry.participant.getImageUrl()).into(imageAvatar);
                 } else {
                     name.setText(null);
-                    avatarText.setText(null);
                 }
                 
                 // apply styles
                 name.setTextColor(listTextColor);
                 name.setTypeface(listTextTypeface, listTextStyle);
-                avatarText.setTextColor(listTextColor);
-                avatarText.setTypeface(listTextTypeface, listTextStyle);
                 return convertView;
             }
 
@@ -271,18 +272,14 @@ public class AtlasParticipantPicker extends FrameLayout {
             Participant entry = participantProvider.getParticipant(id);
             View participantView = LayoutInflater.from(selectedParticipantsContainer.getContext()).inflate(R.layout.atlas_view_participants_picker_name_convert, selectedParticipantsContainer, false);
 
-            TextView avaText = (TextView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_ava);
-            avaText.setText(Atlas.getInitials(entry));
+            ImageView avaText = (ImageView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_ava);
             TextView nameText = (TextView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_name);
             nameText.setText(Atlas.getFullName(entry));
             participantView.setTag(entry);
 
             selectedParticipantsContainer.addView(participantView, selectedParticipantsContainer.getChildCount() - 1);
             if (debug) Log.w(TAG, "refreshParticipants() child added: " + participantView + ", for: " + entry);
-            
-            // apply styles
-            avaText.setTextColor(chipTextColor);
-            avaText.setTypeface(chipTextTypeface, chipTextStyle);
+
             nameText.setTextColor(chipTextColor);
             nameText.setTypeface(chipTextTypeface, chipTextStyle);
             View container = participantView.findViewById(R.id.atlas_view_participants_picker_name_convert);

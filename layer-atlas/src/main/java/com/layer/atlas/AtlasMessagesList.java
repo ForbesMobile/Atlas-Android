@@ -72,6 +72,7 @@ import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.Message.RecipientStatus;
 import com.layer.sdk.messaging.MessagePart;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -200,17 +201,17 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     timeBar.setVisibility(View.GONE);
                 }
                 
-                TextView textAvatar = (TextView) convertView.findViewById(R.id.atlas_view_messages_convert_initials);
+                ImageView imageAvatar = (ImageView) convertView.findViewById(R.id.atlas_view_messages_convert_initials);
                 View spacerRight = convertView.findViewById(R.id.atlas_view_messages_convert_spacer_right);
                 if (myMessage) {
                     spacerRight.setVisibility(View.GONE);
-                    textAvatar.setVisibility(View.INVISIBLE);
+                    imageAvatar.setVisibility(View.INVISIBLE);
                 } else {
                     spacerRight.setVisibility(View.VISIBLE);
                     Atlas.Participant participant = participantProvider.getParticipant(userId);
                     String displayText = participant != null ? Atlas.getInitials(participant) : "";
-                    textAvatar.setText(displayText);
-                    textAvatar.setVisibility(View.VISIBLE);
+                    imageAvatar.setVisibility(View.VISIBLE);
+                    Picasso.with(getContext()).load(participant.getImageUrl()).into(imageAvatar);
                 }
                 
                 // mark unsent messages
@@ -241,8 +242,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                 
                 timeBarDay.setTextColor(dateTextColor);
                 timeBarTime.setTextColor(dateTextColor);
-                textAvatar.setTextColor(avatarTextColor);
-                ((GradientDrawable)textAvatar.getBackground()).setColor(avatarBackgroundColor);
+                ((GradientDrawable)imageAvatar.getBackground()).setColor(avatarBackgroundColor);
                 
                 return convertView;
             }

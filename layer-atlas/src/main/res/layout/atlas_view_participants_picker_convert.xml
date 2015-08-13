@@ -27,13 +27,12 @@
     	android:layout_height="48dp"
     	android:layout_width="48dp"
     	>
-    	<TextView 
+    	<ImageView
     		android:id="@+id/atlas_view_participants_picker_convert_ava"
     		android:layout_width="32dp"
     		android:layout_height="32dp"
     		android:layout_gravity="center"
     		android:background="@drawable/atlas_shape_circle_gray"
-    		android:text="TS"
     		android:gravity="center"
     		/>
     </FrameLayout>

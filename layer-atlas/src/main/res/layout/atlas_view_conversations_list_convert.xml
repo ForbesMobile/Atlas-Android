@@ -14,7 +14,6 @@
      limitations under the License.    
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/atlas_view_conversations_list_convert"
     android:layout_width="match_parent"
     android:layout_height="72dp"
@@ -39,7 +38,8 @@
                 android:layout_height="40dp"
                 android:background="@drawable/atlas_shape_circle_white"
                 />
-            <TextView
+
+            <ImageView
                 android:id="@+id/atlas_view_conversations_list_convert_avatar_single_text"
                 android:layout_width="38dp"
                 android:layout_height="38dp"
@@ -47,8 +47,6 @@
                 android:layout_marginTop="1dp"
                 android:background="@drawable/atlas_shape_circle_gray"
                 android:gravity="center"
-                android:textSize="@dimen/atlas_text_size_smaller"
-                android:text="TS"
                 />
         </FrameLayout>
 
@@ -67,7 +65,7 @@
                 android:background="@drawable/atlas_shape_circle_white"
                 />
 
-            <TextView
+            <ImageView
                 android:id="@+id/atlas_view_conversations_list_convert_avatar_multi_left"
                 android:layout_width="26dp"
                 android:layout_height="26dp"
@@ -75,8 +73,6 @@
                 android:layout_marginTop="16dp"
                 android:background="@drawable/atlas_shape_circle_gray"
                 android:gravity="center"
-                android:textSize="@dimen/atlas_text_size_tiny"
-                android:text="ZF"
                 />
             <View
                 android:layout_width="28dp"
@@ -85,7 +81,7 @@
                 android:layout_marginTop="29dp"
                 android:background="@drawable/atlas_shape_circle_white"
                 />
-            <TextView
+            <ImageView
                 android:id="@+id/atlas_view_conversations_list_convert_avatar_multi_right"
                 android:layout_width="26dp"
                 android:layout_height="26dp"
@@ -93,8 +89,6 @@
                 android:layout_marginTop="30dp"
                 android:background="@drawable/atlas_shape_circle_gray"
                 android:gravity="center"
-                android:textSize="@dimen/atlas_text_size_tiny"
-                android:text="AB"
                 />
         </FrameLayout>
 

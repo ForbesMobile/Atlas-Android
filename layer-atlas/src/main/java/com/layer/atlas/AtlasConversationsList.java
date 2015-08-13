@@ -40,6 +40,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -55,6 +56,7 @@ import com.layer.sdk.messaging.Conversation;
 import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.Message.RecipientStatus;
+import com.squareup.picasso.Picasso;
 
 /**
  * @author Oleg Orlov
@@ -146,17 +148,18 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 textTitle.setText(conversationTitle);
                 
                 // avatar icons... 
-                TextView textInitials = (TextView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
+                ImageView avatarSingleImage = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
                 View avatarSingle = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single);
                 View avatarMulti = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi);
                 if (allButMe.size() < 2) {
                     String conterpartyUserId = allButMe.get(0);
                     Atlas.Participant participant = participantProvider.getParticipant(conterpartyUserId);
-                    textInitials.setText(participant == null ? null : Atlas.getInitials(participant));
-                    textInitials.setTextColor(avatarTextColor);
-                    ((GradientDrawable) textInitials.getBackground()).setColor(avatarBackgroundColor);
+
+                    ((GradientDrawable) avatarSingleImage.getBackground()).setColor(avatarBackgroundColor);
                     avatarSingle.setVisibility(View.VISIBLE);
                     avatarMulti.setVisibility(View.GONE);
+                    Picasso.with(getContext()).load(participant.getImageUrl()).into(avatarSingleImage);
+
                 } else {
                     Participant leftParticipant = null;
                     Participant rightParticipant = null;
@@ -172,16 +175,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                             break;
                         }
                     }
-                    
-                    TextView textInitialsLeft = (TextView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
-                    textInitialsLeft.setText(leftParticipant == null ? "?" : Atlas.getInitials(leftParticipant));
-                    textInitialsLeft.setTextColor(avatarTextColor);
-                    ((GradientDrawable) textInitialsLeft.getBackground()).setColor(avatarBackgroundColor);
-                    
-                    TextView textInitialsRight = (TextView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
-                    textInitialsRight.setText(rightParticipant == null ? "?" : Atlas.getInitials(rightParticipant));
-                    textInitialsRight.setTextColor(avatarTextColor);
-                    ((GradientDrawable) textInitialsRight.getBackground()).setColor(avatarBackgroundColor);
+
+                    ImageView textInitialsLeft = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
+                    ImageView textInitialsRight = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
+                    Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
+                    Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
                     
                     avatarSingle.setVisibility(View.GONE);
                     avatarMulti.setVisibility(View.VISIBLE);

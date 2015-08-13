@@ -19,4 +19,5 @@ dependencies {
         exclude group: "com.android.support"
     }
     compile 'org.slf4j:slf4j-nop:1.5.8'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }
