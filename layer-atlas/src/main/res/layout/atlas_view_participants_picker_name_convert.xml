@@ -33,16 +33,12 @@
         >
     
         <!-- avatar placeholder -->
-    	<TextView 
-        	android:id="@+id/atlas_view_participants_picker_name_convert_ava"
-        	android:layout_width="24dp"
-        	android:layout_height="24dp"
-        	android:layout_gravity="center"
-        	android:background="@drawable/atlas_shape_circle_gray"
-        	android:text="TS"
-            android:textSize="@dimen/atlas_text_size_smaller2"
-        	android:gravity="center"
-        	/>
+        <ImageView
+            android:id="@+id/atlas_view_participants_picker_name_convert_ava"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:background="@drawable/atlas_shape_circle_gray" />
     	
     	<TextView
     		android:id="@+id/atlas_view_participants_picker_name_convert_name"

@@ -48,7 +48,7 @@ import com.layer.sdk.messaging.MessagePart;
 public class Atlas {
 
     public static final String METADATA_KEY_CONVERSATION_TITLE = "conversationName";
-    
+
     public static final String MIME_TYPE_ATLAS_LOCATION = "location/coordinate";
     public static final String MIME_TYPE_TEXT = "text/plain";
     public static final String MIME_TYPE_IMAGE_JPEG = "image/jpeg";
@@ -115,11 +115,11 @@ public class Atlas {
         /** Millis in 24 Hours */
         public static final int TIME_HOURS_24 = 24 * 60 * 60 * 1000;
         // TODO: localization required to all time based constants below
-        public static final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm a"); 
+        public static final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm a");
         public static final SimpleDateFormat sdfDayOfWeek = new SimpleDateFormat("EEE, LLL dd,");
         /** Ensure you decrease value returned by Calendar.get(Calendar.DAY_OF_WEEK) by 1. Calendar's days starts from 1. */
         public static final String[] TIME_WEEKDAYS_NAMES = new String[] {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-        
+
         public static String toString(Message msg) {
             StringBuilder sb = new StringBuilder();
             for (MessagePart mp : msg.getMessageParts()) {
@@ -143,15 +143,15 @@ public class Atlas {
             }
             return result;
         }
-        
+
         public static float getPxFromDp(float dp, Context context) {
             return getPxFromDp(dp, context.getResources().getDisplayMetrics());
         }
-        
+
         public static float getPxFromDp(float dp, DisplayMetrics displayMetrics) {
             return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics);
         }
-        
+
         public static View findChildById(ViewGroup group, int id) {
             for (int i = 0; i < group.getChildCount(); i++) {
                 View child = group.getChildAt(i);
@@ -159,14 +159,14 @@ public class Atlas {
             }
             return null;
         }
-        
+
         public static void closeQuietly(InputStream stream) {
             if (stream == null) return;
             try {
                 stream.close();
             } catch (Throwable ignoredQueitly) {}
         }
-        
+
         public static void closeQuietly(OutputStream stream) {
             if (stream == null) return;
             try {
@@ -199,7 +199,7 @@ public class Atlas {
 
         public static String toStringSpec(int measureSpec) {
             switch (MeasureSpec.getMode(measureSpec)) {
-                case MeasureSpec.AT_MOST : return "" + MeasureSpec.getSize(measureSpec) + ":A";  
+                case MeasureSpec.AT_MOST : return "" + MeasureSpec.getSize(measureSpec) + ":A";
                 case MeasureSpec.EXACTLY : return "" + MeasureSpec.getSize(measureSpec) + ":E";
                 default                  : return "" + MeasureSpec.getSize(measureSpec) + ":U";
             }
@@ -213,7 +213,7 @@ public class Atlas {
     public interface Participant {
         /**
          * Returns the first name of this Participant.
-         * 
+         *
          * @return The first name of this Participant
          */
         String getFirstName();
@@ -224,7 +224,9 @@ public class Atlas {
          * @return The last name of this Participant
          */
         String getLastName();
-        
+
+        String getImageUrl();
+
         public static Comparator<Participant> COMPARATOR = new FilteringComparator("");
     }
 
@@ -254,25 +256,25 @@ public class Atlas {
 
     public static final class FilteringComparator implements Comparator<Atlas.Participant> {
         private final String filter;
-    
+
         /**
          * @param filter - the less indexOf(filter) the less order of participant
          */
         public FilteringComparator(String filter) {
             this.filter = filter;
         }
-    
+
         @Override
         public int compare(Atlas.Participant lhs, Atlas.Participant rhs) {
             int result = subCompareCaseInsensitive(lhs.getFirstName(), rhs.getFirstName());
             if (result != 0) return result;
             return subCompareCaseInsensitive(lhs.getLastName(), rhs.getLastName());
         }
-    
+
         private int subCompareCaseInsensitive(String lhs, String rhs) {
             int left = lhs != null ? lhs.toLowerCase().indexOf(filter) : -1;
             int right = rhs != null ? rhs.toLowerCase().indexOf(filter) : -1;
-    
+
             if (left == -1 && right == -1) return 0;
             if (left != -1 && right == -1) return -1;
             if (left == -1 && right != -1) return 1;
@@ -282,48 +284,48 @@ public class Atlas {
     }
 
     /**
-     * TODO: 
-     * 
-     * - imageCache should accept any "Downloader" that download something with progress 
+     * TODO:
+     *
+     * - imageCache should accept any "Downloader" that download something with progress
      * - imageCache should reschedule image if decoding failed
-     * - imageCache should reschedule image if decoded width was cut due to OOM (-> sampleSize > 1) 
+     * - imageCache should reschedule image if decoded width was cut due to OOM (-> sampleSize > 1)
      * - maximum retries should be configurable
-     * 
+     *
      */
     public static class ImageLoader {
         private static final String TAG = Atlas.ImageLoader.class.getSimpleName();
         private static final boolean debug = false;
-        
+
         private static final int BITMAP_DECODE_RETRIES = 10;
         private static final double MEMORY_THRESHOLD = 0.7;
-        
+
         private volatile boolean shutdownLoader = false;
         private final Thread processingThread;
         private final Object lock = new Object();
         private final ArrayList<ImageSpec> queue = new ArrayList<ImageSpec>();
-        
+
         private LinkedHashMap<Object, Bitmap> cache = new LinkedHashMap<Object, Bitmap>(40, 1f, true) {
             private static final long serialVersionUID = 1L;
             protected boolean removeEldestEntry(Entry<Object, Bitmap> eldest) {
                 // calculate available memory
                 long maxMemory = Runtime.getRuntime().maxMemory();
                 long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                boolean cleaningRequired = 1.0 * usedMemory / maxMemory > MEMORY_THRESHOLD; 
-                
+                boolean cleaningRequired = 1.0 * usedMemory / maxMemory > MEMORY_THRESHOLD;
+
                 final Object id = eldest.getKey();
                 if (cleaningRequired) if (debug) Log.w(TAG, "removeEldestEntry() cleaning bitmap for: " + id + ", size: " + cache.size() + ", queue: " + queue.size());
-                else                  if (debug) Log.w(TAG, "removeEldestEntry() " + " nothing, size: " + cache.size() + ", queue: " + queue.size());                    
-    
+                else                  if (debug) Log.w(TAG, "removeEldestEntry() " + " nothing, size: " + cache.size() + ", queue: " + queue.size());
+
                 return cleaningRequired;
             }
         };
-    
+
         public ImageLoader() {
             // launching thread
-            processingThread = new Decoder("AtlasImageLoader"); 
+            processingThread = new Decoder("AtlasImageLoader");
             processingThread.start();
         }
-        
+
         private final class Decoder extends Thread {
             public Decoder(String threadName) {
                 super(threadName);
@@ -331,7 +333,7 @@ public class Atlas {
             public void run() {
                 if (debug) Log.w(TAG, "ImageLoader.run() started");
                 while (!shutdownLoader) {
-   
+
                     ImageSpec spec = null;
                     // search bitmap ready to inflate
                     // wait for queue
@@ -350,15 +352,15 @@ public class Atlas {
                             } catch (InterruptedException e) {}
                         }
                     }
-   
+
                     // decoding bitmap
                     int requiredWidth = spec.requiredWidth;
                     int requiredHeight = spec.requiredHeight;
                     // load
                     long started = System.currentTimeMillis();
                     InputStream streamForBounds = spec.inputStreamProvider.getInputStream();
-                    if (streamForBounds == null) { 
-                        Log.e(TAG, "decodeImage() stream is null! Request cancelled. Spec: " + spec.id + ", provider: " + spec.inputStreamProvider.getClass().getSimpleName()); return; 
+                    if (streamForBounds == null) {
+                        Log.e(TAG, "decodeImage() stream is null! Request cancelled. Spec: " + spec.id + ", provider: " + spec.inputStreamProvider.getClass().getSimpleName()); return;
                     }
                     BitmapFactory.Options originalOpts = new BitmapFactory.Options();
                     originalOpts.inJustDecodeBounds = true;
@@ -384,17 +386,17 @@ public class Atlas {
                     }
                     Tools.closeQuietly(streamForBitmap);
                     if (bmp != null) {
-                        if (debug) Log.d(TAG, "decodeImage() decoded " + bmp.getWidth() + "x" + bmp.getHeight() 
-                                + " " + bmp.getByteCount() + " bytes" 
-                                + " req: " + requiredWidth + "x" + requiredHeight 
-                                                + " original: " + originalOpts.outWidth + "x" + originalOpts.outHeight 
+                        if (debug) Log.d(TAG, "decodeImage() decoded " + bmp.getWidth() + "x" + bmp.getHeight()
+                                + " " + bmp.getByteCount() + " bytes"
+                                + " req: " + requiredWidth + "x" + requiredHeight
+                                                + " original: " + originalOpts.outWidth + "x" + originalOpts.outHeight
                                 + " sampleSize: " + sampleSize
                                 + " in " +(System.currentTimeMillis() - started) + "ms from: " + spec.id);
                     } else {
-                        if (debug) Log.d(TAG, "decodeImage() not decoded " + " req: " + requiredWidth + "x" + requiredHeight 
+                        if (debug) Log.d(TAG, "decodeImage() not decoded " + " req: " + requiredWidth + "x" + requiredHeight
                                 + " in " +(System.currentTimeMillis() - started) + "ms from: " + spec.id);
                     }
-   
+
                     // decoded
                     synchronized (lock) {
                         if (bmp != null) {
@@ -406,16 +408,16 @@ public class Atlas {
                             lock.notifyAll();
                         } /*else forget about this image, never put it back in queue */
                     }
-   
+
                     if (debug) Log.w(TAG, "decodeImage()   cache: " + cache.size() + ", queue: " + queue.size() + ", id: " + spec.id);
                 }
             }
         }
-    
+
         public Bitmap getBitmapFromCache(Object id) {
             return cache.get(id);
         }
-                
+
         /**
          * @return - byteCount of removed bitmap if bitmap found. <bold>-1</bold> otherwise
          */
@@ -433,7 +435,7 @@ public class Atlas {
                 }
             }
         }
-                
+
         public ImageSpec requestBitmap(Object id, StreamProvider streamProvider, int requiredWidth, int requiredHeight, ImageLoader.BitmapLoadListener loadListener) {
             ImageSpec spec = null;
             synchronized (lock) {
@@ -473,12 +475,12 @@ public class Atlas {
         public static abstract class BitmapLoadListener {
             public abstract void onBitmapLoaded(ImageSpec spec);
         }
-        
+
         public static abstract class StreamProvider {
             public abstract InputStream getInputStream();
             public abstract boolean ready();
         }
-        
+
         public static class MessagePartStreamProvider extends StreamProvider {
             public final MessagePart part;
             public MessagePartStreamProvider(MessagePart part) {
@@ -492,7 +494,7 @@ public class Atlas {
                 return part.isContentReady();
             }
         }
-        
+
         public static class FileStreamProvider extends StreamProvider {
             final File file;
             public FileStreamProvider(File file) {
@@ -514,5 +516,5 @@ public class Atlas {
             }
         }
     }
-    
+
 }
