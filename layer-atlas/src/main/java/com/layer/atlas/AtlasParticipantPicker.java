@@ -272,7 +272,8 @@ public class AtlasParticipantPicker extends FrameLayout {
             Participant entry = participantProvider.getParticipant(id);
             View participantView = LayoutInflater.from(selectedParticipantsContainer.getContext()).inflate(R.layout.atlas_view_participants_picker_name_convert, selectedParticipantsContainer, false);
 
-            ImageView avaText = (ImageView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_ava);
+            ImageView imageAvatar = (ImageView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_ava);
+            Picasso.with(getContext()).load(entry.getImageUrl()).into(imageAvatar);
             TextView nameText = (TextView) participantView.findViewById(R.id.atlas_view_participants_picker_name_convert_name);
             nameText.setText(Atlas.getFullName(entry));
             participantView.setTag(entry);
