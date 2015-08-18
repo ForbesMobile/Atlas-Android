@@ -121,7 +121,8 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
     private int dateTextColor;
     private int avatarTextColor;
     private int avatarBackgroundColor;
-    
+    private ActionOnTextView actionOnTextView;
+
     public AtlasMessagesList(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         parseStyle(context, attrs, defStyle);
@@ -137,11 +138,12 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
         this.timeFormat = android.text.format.DateFormat.getTimeFormat(context);
     }
 
-    public void init(final LayerClient layerClient, final Atlas.ParticipantProvider participantProvider) {
+    public void init(final LayerClient layerClient, final Atlas.ParticipantProvider participantProvider, ActionOnTextView actionOnTextView) {
         if (layerClient == null) throw new IllegalArgumentException("LayerClient cannot be null");
         if (participantProvider == null) throw new IllegalArgumentException("ParticipantProvider cannot be null");
         if (messagesList != null) throw new IllegalStateException("AtlasMessagesList is already initialized!");
-        
+
+        this.actionOnTextView = actionOnTextView;
         this.client = layerClient;
         LayoutInflater.from(getContext()).inflate(R.layout.atlas_messages_list, this);
         
@@ -874,10 +876,11 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                 }
                 ((GradientDrawable)textMy.getBackground()).setColor(myBubbleColor);
                 textMy.setTextColor(myTextColor);
-                //textMy.setTextSize(TypedValue.COMPLEX_UNIT_DIP, myTextSize);
-                textMy.setTypeface(myTextTypeface, myTextStyle);
 
+                textMy.setTypeface(myTextTypeface, myTextStyle);
+                actionOnTextView.forTextView(textMy);
                 activity.registerForContextMenu(textMy);
+
             } else {
                 textOther.setVisibility(View.VISIBLE);
                 textOther.setText(text);
@@ -896,7 +899,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                 ((GradientDrawable)textOther.getBackground()).setColor(otherBubbleColor);
                 textOther.setTextColor(otherTextColor);
                 textOther.setTypeface(otherTextTypeface, otherTextStyle);
-
+                actionOnTextView.forTextView(textOther);
                 activity.registerForContextMenu(textOther);
             }
 
@@ -1090,6 +1093,10 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
     
     public interface ItemClickListener {
         void onItemClick(Cell item);
+    }
+
+    public interface ActionOnTextView {
+        void forTextView(TextView textView);
     }
 
 }
