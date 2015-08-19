@@ -32,15 +32,21 @@ import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -68,7 +74,7 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     private static final boolean debug = false;
 
     private ListView conversationsList;
-    private BaseAdapter conversationsAdapter;
+    private ConversationsAdapter conversationsAdapter;
 
     private ArrayList<Conversation> conversations = new ArrayList<Conversation>();
     
@@ -128,111 +134,8 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         LayoutInflater.from(getContext()).inflate(R.layout.atlas_conversations_list, this);
         
         this.conversationsList = (ListView) findViewById(R.id.atlas_conversations_view);
-        this.conversationsList.setAdapter(conversationsAdapter = new BaseAdapter() {
-            
-            public View getView(int position, View convertView, ViewGroup parent) {
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.atlas_view_conversations_list_convert, parent, false);
-                }
-                
-                Uri convId = conversations.get(position).getId();
-                Conversation conv = layerClient.getConversation(convId);
-                if(conv == null) {
-                    return convertView;
-                }
-                ArrayList<String> allButMe = new ArrayList<String>(conv.getParticipants());
-                allButMe.remove(layerClient.getAuthenticatedUserId());
-                
-                TextView textTitle = (TextView) convertView.findViewById(R.id.atlas_conversation_view_convert_participant);
-                String conversationTitle = Atlas.getTitle(conv, participantProvider, layerClient.getAuthenticatedUserId());
-                textTitle.setText(conversationTitle);
-                
-                // avatar icons... 
-                ImageView avatarSingleImage = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
-                View avatarSingle = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single);
-                View avatarMulti = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi);
-                if (allButMe.size() < 2) {
-                    String conterpartyUserId = allButMe.get(0);
-                    Atlas.Participant participant = participantProvider.getParticipant(conterpartyUserId);
-
-                    ((GradientDrawable) avatarSingleImage.getBackground()).setColor(avatarBackgroundColor);
-                    avatarSingle.setVisibility(View.VISIBLE);
-                    avatarMulti.setVisibility(View.GONE);
-                    Picasso.with(getContext()).load(participant.getImageUrl()).into(avatarSingleImage);
-
-                } else {
-                    Participant leftParticipant = null;
-                    Participant rightParticipant = null;
-                    for (Iterator<String> itUserId = allButMe.iterator(); itUserId.hasNext();) {
-                        String userId = itUserId.next();
-                        Participant p = participantProvider.getParticipant(userId);
-                        if (p == null) continue;
-                        
-                        if (leftParticipant == null) {
-                            leftParticipant = p;
-                        } else {
-                            rightParticipant = p;
-                            break;
-                        }
-                    }
-
-                    ImageView textInitialsLeft = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
-                    ImageView textInitialsRight = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
-                    Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
-                    Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
-                    
-                    avatarSingle.setVisibility(View.GONE);
-                    avatarMulti.setVisibility(View.VISIBLE);
-                }
-                
-                TextView textLastMessage = (TextView) convertView.findViewById(R.id.atlas_conversation_view_last_message);
-                TextView timeView = (TextView) convertView.findViewById(R.id.atlas_conversation_view_convert_time);
-                if (conv.getLastMessage() != null ) {
-                    Message last = conv.getLastMessage();
-                    String lastMessageText = Atlas.Tools.toString(last);
-                    textLastMessage.setText(lastMessageText);
-                    
-                    Date sentAt = last.getSentAt();
-                    if (sentAt == null) timeView.setText("...");
-                    else                timeView.setText(formatTime(sentAt));
-
-                    String userId = last.getSender().getUserId();                   // could be null for system messages 
-                    String myId = layerClient.getAuthenticatedUserId();
-                    if ((userId != null) && !userId.equals(myId) && last.getRecipientStatus(myId) != RecipientStatus.READ) {
-                        textTitle.setTextColor(titleUnreadTextColor);
-                        textTitle.setTypeface(titleUnreadTextTypeface, titleUnreadTextStyle);
-                        textLastMessage.setTypeface(subtitleUnreadTextTypeface, subtitleUnreadTextStyle);
-                        textLastMessage.setTextColor(subtitleUnreadTextColor);
-                        convertView.setBackgroundColor(cellUnreadBackgroundColor);
-                    } else {
-                        textTitle.setTextColor(titleTextColor);
-                        textTitle.setTypeface(titleTextTypeface, titleTextStyle);
-                        textLastMessage.setTypeface(subtitleTextTypeface, subtitleTextStyle);
-                        textLastMessage.setTextColor(subtitleTextColor);
-                        convertView.setBackgroundColor(cellBackgroundColor);
-                    }
-                } else {
-                    timeView.setText("...");
-                    textLastMessage.setText("");
-                    textTitle.setTextColor(titleTextColor);
-                    textTitle.setTypeface(titleTextTypeface, titleTextStyle);
-                    textLastMessage.setTypeface(subtitleTextTypeface, subtitleTextStyle);
-                    textLastMessage.setTextColor(subtitleTextColor);
-                    convertView.setBackgroundColor(cellBackgroundColor);
-                }
-                timeView.setTextColor(dateTextColor);
-                return convertView;
-            }
-            public long getItemId(int position) {
-                return position;
-            }
-            public Object getItem(int position) {
-                return conversations.get(position);
-            }
-            public int getCount() {
-                return conversations.size();
-            }
-        });
+        conversationsAdapter = new ConversationsAdapter(participantProvider);
+        this.conversationsList.setAdapter(conversationsAdapter);
         
         conversationsList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -248,6 +151,40 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
             }
         });
 
+//        conversationsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+//        conversationsList.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+//            @Override
+//            public void onItemCheckedStateChanged(ActionMode actionMode, int position, long id, boolean checked) {
+//                // Capture total checked items
+//                final int checkedCount = conversationsList.getCheckedItemCount();
+//                // Set the CAB title according to total checked items
+//                actionMode.setTitle(checkedCount + " Selected");
+//
+//                // Calls toggleSelection method from ListViewAdapter Class
+//                conversationsAdapter.toggleSelection(position);
+//            }
+//
+//            @Override
+//            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+//                actionMode.getMenuInflater().inflate(R.menu.conversations_menu, menu);
+//                return true;
+//            }
+//
+//            @Override
+//            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+//                return false;
+//            }
+//
+//            @Override
+//            public void onDestroyActionMode(ActionMode actionMode) {
+//
+//            }
+//        });
         layerClient.registerEventListener(this);
         // clean everything if deathenticated (client will explode on .getConversation())
         // and rebuilt everything back after successful authentication  
@@ -378,13 +315,6 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     @Override
     public void onEventMainThread(LayerChangeEvent event) {
         updateValues();
-//        for (LayerChange change : event.getChanges()) {
-//            if (change.getObjectType() == LayerObject.Type.CONVERSATION
-//                    || change.getObjectType() == LayerObject.Type.MESSAGE) {
-//                updateValues();
-//                return;
-//            }
-//        }
     }
 
     public ConversationClickListener getClickListener() {
@@ -410,5 +340,150 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     
     public interface ConversationLongClickListener {
         void onItemLongClick(Conversation conversation);
+    }
+
+    class ConversationsAdapter extends BaseAdapter {
+        Atlas.ParticipantProvider participantProvider;
+        SparseBooleanArray selectedItemsIds;
+
+        public ConversationsAdapter(Atlas.ParticipantProvider participantProvider) {
+            this.participantProvider = participantProvider;
+            selectedItemsIds = new SparseBooleanArray();
+        }
+
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.atlas_view_conversations_list_convert, parent, false);
+            }
+
+            Uri convId = conversations.get(position).getId();
+            Conversation conv = layerClient.getConversation(convId);
+            if(conv == null) {
+                return convertView;
+            }
+            ArrayList<String> allButMe = new ArrayList<String>(conv.getParticipants());
+            allButMe.remove(layerClient.getAuthenticatedUserId());
+
+            TextView textTitle = (TextView) convertView.findViewById(R.id.atlas_conversation_view_convert_participant);
+            String conversationTitle = Atlas.getTitle(conv, participantProvider, layerClient.getAuthenticatedUserId());
+            textTitle.setText(conversationTitle);
+
+            // avatar icons...
+            ImageView avatarSingleImage = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single_text);
+            View avatarSingle = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_single);
+            View avatarMulti = convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi);
+            if (allButMe.size() < 2) {
+                String conterpartyUserId = allButMe.get(0);
+                Atlas.Participant participant = participantProvider.getParticipant(conterpartyUserId);
+
+                ((GradientDrawable) avatarSingleImage.getBackground()).setColor(avatarBackgroundColor);
+                avatarSingle.setVisibility(View.VISIBLE);
+                avatarMulti.setVisibility(View.GONE);
+                Picasso.with(getContext()).load(participant.getImageUrl()).into(avatarSingleImage);
+
+            } else {
+                Participant leftParticipant = null;
+                Participant rightParticipant = null;
+                for (Iterator<String> itUserId = allButMe.iterator(); itUserId.hasNext();) {
+                    String userId = itUserId.next();
+                    Participant p = participantProvider.getParticipant(userId);
+                    if (p == null) continue;
+
+                    if (leftParticipant == null) {
+                        leftParticipant = p;
+                    } else {
+                        rightParticipant = p;
+                        break;
+                    }
+                }
+
+                ImageView textInitialsLeft = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
+                ImageView textInitialsRight = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
+                Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
+                Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
+
+                avatarSingle.setVisibility(View.GONE);
+                avatarMulti.setVisibility(View.VISIBLE);
+            }
+
+            TextView textLastMessage = (TextView) convertView.findViewById(R.id.atlas_conversation_view_last_message);
+            TextView timeView = (TextView) convertView.findViewById(R.id.atlas_conversation_view_convert_time);
+            if (conv.getLastMessage() != null ) {
+                Message last = conv.getLastMessage();
+                String lastMessageText = Atlas.Tools.toString(last);
+                textLastMessage.setText(lastMessageText);
+
+                Date sentAt = last.getSentAt();
+                if (sentAt == null) timeView.setText("...");
+                else                timeView.setText(formatTime(sentAt));
+
+                String userId = last.getSender().getUserId();                   // could be null for system messages
+                String myId = layerClient.getAuthenticatedUserId();
+                if ((userId != null) && !userId.equals(myId) && last.getRecipientStatus(myId) != RecipientStatus.READ) {
+                    textTitle.setTextColor(titleUnreadTextColor);
+                    textTitle.setTypeface(titleUnreadTextTypeface, titleUnreadTextStyle);
+                    textLastMessage.setTypeface(subtitleUnreadTextTypeface, subtitleUnreadTextStyle);
+                    textLastMessage.setTextColor(subtitleUnreadTextColor);
+                    convertView.setBackgroundColor(cellUnreadBackgroundColor);
+                } else {
+                    textTitle.setTextColor(titleTextColor);
+                    textTitle.setTypeface(titleTextTypeface, titleTextStyle);
+                    textLastMessage.setTypeface(subtitleTextTypeface, subtitleTextStyle);
+                    textLastMessage.setTextColor(subtitleTextColor);
+                    convertView.setBackgroundColor(cellBackgroundColor);
+                }
+            } else {
+                timeView.setText("...");
+                textLastMessage.setText("");
+                textTitle.setTextColor(titleTextColor);
+                textTitle.setTypeface(titleTextTypeface, titleTextStyle);
+                textLastMessage.setTypeface(subtitleTextTypeface, subtitleTextStyle);
+                textLastMessage.setTextColor(subtitleTextColor);
+                convertView.setBackgroundColor(cellBackgroundColor);
+            }
+            timeView.setTextColor(dateTextColor);
+            return convertView;
+        }
+
+        public void remove(Conversation conversation) {
+            conversation.delete(LayerClient.DeletionMode.LOCAL);
+            notifyDataSetChanged();
+        }
+
+        public long getItemId(int position) {
+            return position;
+        }
+        public Object getItem(int position) {
+            return conversations.get(position);
+        }
+        public int getCount() {
+            return conversations.size();
+        }
+
+        public void selectView(int position, boolean value) {
+            if (value) {
+                selectedItemsIds.put(position, value);
+            } else {
+                selectedItemsIds.delete(position);
+            }
+            notifyDataSetChanged();
+        }
+
+        public int getSelectedCount() {
+            return selectedItemsIds.size();
+        }
+
+        public SparseBooleanArray getSelectedIds() {
+            return selectedItemsIds;
+        }
+
+        public void toggleSelection(int position) {
+            selectView(position, !selectedItemsIds.get(position));
+        }
+
+        public void removeSelection() {
+            selectedItemsIds = new SparseBooleanArray();
+            notifyDataSetChanged();
+        }
     }
 }

@@ -17,7 +17,7 @@
     android:id="@+id/atlas_view_conversations_list_convert"
     android:layout_width="match_parent"
     android:layout_height="72dp"
-    android:orientation="horizontal" >
+    android:orientation="horizontal">
 
     <!-- avatar container -->
     <FrameLayout
