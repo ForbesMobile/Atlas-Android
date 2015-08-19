@@ -24,7 +24,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -69,7 +71,7 @@ import com.squareup.picasso.Picasso;
  * @since 14 May 2015
  */
 public class AtlasConversationsList extends FrameLayout implements LayerChangeEventListener.MainThread {
-    
+
     private static final String TAG = AtlasConversationsList.class.getSimpleName();
     private static final boolean debug = false;
 
@@ -77,12 +79,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     private ConversationsAdapter conversationsAdapter;
 
     private ArrayList<Conversation> conversations = new ArrayList<Conversation>();
-    
+
     private LayerClient layerClient;
-    
+
     private ConversationClickListener clickListener;
     private ConversationLongClickListener longClickListener;
-    
+
     //styles
     private int titleTextColor;
     private int titleTextStyle;
@@ -101,10 +103,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     private int dateTextColor;
     private int avatarTextColor;
     private int avatarBackgroundColor;
-    
-    // date 
+
+    // date
     private final DateFormat dateFormat;
     private final DateFormat timeFormat;
+
+    private HideNavbar hideNavbar;
 
     public AtlasConversationsList(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -127,16 +131,16 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         if (layerClient == null) throw new IllegalArgumentException("LayerClient cannot be null");
         if (participantProvider == null) throw new IllegalArgumentException("ParticipantProvider cannot be null");
         if (conversationsList != null) throw new IllegalStateException("AtlasConversationList is already initialized!");
-        
+
         this.layerClient = layerClient;
-        
+
         // inflate children:
         LayoutInflater.from(getContext()).inflate(R.layout.atlas_conversations_list, this);
-        
+
         this.conversationsList = (ListView) findViewById(R.id.atlas_conversations_view);
         conversationsAdapter = new ConversationsAdapter(participantProvider);
         this.conversationsList.setAdapter(conversationsAdapter);
-        
+
         conversationsList.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Conversation conv = conversations.get(position);
@@ -151,70 +155,121 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
             }
         });
 
-//        conversationsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-//        conversationsList.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
-//            @Override
-//            public void onItemCheckedStateChanged(ActionMode actionMode, int position, long id, boolean checked) {
-//                // Capture total checked items
-//                final int checkedCount = conversationsList.getCheckedItemCount();
-//                // Set the CAB title according to total checked items
-//                actionMode.setTitle(checkedCount + " Selected");
-//
-//                // Calls toggleSelection method from ListViewAdapter Class
-//                conversationsAdapter.toggleSelection(position);
-//            }
-//
-//            @Override
-//            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-//                actionMode.getMenuInflater().inflate(R.menu.conversations_menu, menu);
-//                return true;
-//            }
-//
-//            @Override
-//            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-//                return false;
-//            }
-//
-//            @Override
-//            public void onDestroyActionMode(ActionMode actionMode) {
-//
-//            }
-//        });
+        conversationsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+        conversationsList.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+            @Override
+            public void onItemCheckedStateChanged(ActionMode actionMode, int position, long id, boolean checked) {
+                // Capture total checked items
+                final int checkedCount = conversationsList.getCheckedItemCount();
+                // Set the CAB title according to total checked items
+                actionMode.setTitle(checkedCount + " Selected");
+
+                // Calls toggleSelection method from ListViewAdapter Class
+                conversationsAdapter.toggleSelection(position);
+            }
+
+            @Override
+            public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+                actionMode.getMenuInflater().inflate(R.menu.conversations_menu, menu);
+//                hideNavbar.hideNavbar();
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+                return false;
+            }
+
+            @Override
+            public boolean onActionItemClicked(final ActionMode actionMode, MenuItem menuItem) {
+
+                if (menuItem.getItemId() == R.id.atlas_conversations_menu_delete_one) {
+                    String title = "Delete message";
+                    if (conversationsList.getCheckedItemCount() > 1)
+                        title += "s";
+                    title += "?";
+
+                    new AlertDialog.Builder(getContext())
+                            .setMessage(title)
+                            .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    SparseBooleanArray checked = conversationsList.getCheckedItemPositions();
+                                    int size = checked.size(); // number of name-value pairs in the array
+                                    for (int i = 0; i < size; i++) {
+                                        int key = checked.keyAt(i);
+                                        boolean value = checked.get(key);
+                                        if (value) {
+                                            deleteConversation(key);
+                                        }
+                                    }
+
+                                    clearChoices();
+                                    updateValues();
+                                    actionMode.finish();
+                                }
+                            }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                }
+                            }
+                    ).create().show();
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode actionMode) {
+                clearChoices();
+                conversationsList.clearChoices();
+//                hideNavbar.showNavbar();
+            }
+        });
+
         layerClient.registerEventListener(this);
         // clean everything if deathenticated (client will explode on .getConversation())
-        // and rebuilt everything back after successful authentication  
+        // and rebuilt everything back after successful authentication
         layerClient.registerAuthenticationListener(new LayerAuthenticationListener() {
             public void onDeauthenticated(LayerClient client) {
                 if (debug) Log.w(TAG, "onDeauthenticated() ");
                 updateValues();
             }
+
             public void onAuthenticated(LayerClient client, String userId) {
                 updateValues();
             }
-            public void onAuthenticationError(LayerClient client, LayerException exception) {}
-            public void onAuthenticationChallenge(LayerClient client, String nonce) {}
+
+            public void onAuthenticationError(LayerClient client, LayerException exception) {
+            }
+
+            public void onAuthenticationChallenge(LayerClient client, String nonce) {
+            }
         });
-        
+
         applyStyle();
 
         updateValues();
     }
-    
+
+    public void clearChoices() {
+        conversationsAdapter.selectedItemsIds.clear();
+    }
+
+    private void deleteConversation(int index) {
+        ((Conversation)conversationsAdapter.getItem(index)).delete(LayerClient.DeletionMode.LOCAL);
+    }
+
     public void updateValues() {
         if (conversationsAdapter == null) {                 // never initialized
             return;
         }
-        
-        conversations.clear();                              // always clean, rebuild if authenticated 
+
+        conversations.clear();                              // always clean, rebuild if authenticated
         conversationsAdapter.notifyDataSetChanged();
-        
+
         if (layerClient.isAuthenticated()) {
-            
+
             List<Conversation> convs = layerClient.getConversations();
             if (debug) Log.d(TAG, "updateValues() conv: " + convs.size());
             for (Conversation conv : convs) {
@@ -222,12 +277,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 if (conv.getParticipants().size() == 0) continue;
                 // only ourselves in participant list is possible to happen, but there is nothing to do with it
                 // behave like conversation is disconnected
-                if (conv.getParticipants().size() == 1 
+                if (conv.getParticipants().size() == 1
                         && conv.getParticipants().contains(layerClient.getAuthenticatedUserId())) continue;
-                
+
                 conversations.add(conv);
             }
-            
+
             // the bigger .time the highest in the list
             Collections.sort(conversations, new Comparator<Conversation>() {
                 public int compare(Conversation lhs, Conversation rhs) {
@@ -257,36 +312,36 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         TypedArray ta = context.getTheme().obtainStyledAttributes(attrs, R.styleable.AtlasConversationList, R.attr.AtlasConversationList, defStyle);
         this.titleTextColor = ta.getColor(R.styleable.AtlasConversationList_cellTitleTextColor, context.getResources().getColor(R.color.atlas_text_black));
         this.titleTextStyle = ta.getInt(R.styleable.AtlasConversationList_cellTitleTextStyle, Typeface.NORMAL);
-        String titleTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellTitleTextTypeface); 
+        String titleTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellTitleTextTypeface);
         this.titleTextTypeface  = titleTextTypefaceName != null ? Typeface.create(titleTextTypefaceName, titleTextStyle) : null;
-        
+
         this.titleUnreadTextColor = ta.getColor(R.styleable.AtlasConversationList_cellTitleUnreadTextColor, context.getResources().getColor(R.color.atlas_text_black));
         this.titleUnreadTextStyle = ta.getInt(R.styleable.AtlasConversationList_cellTitleUnreadTextStyle, Typeface.BOLD);
-        String titleUnreadTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellTitleUnreadTextTypeface); 
+        String titleUnreadTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellTitleUnreadTextTypeface);
         this.titleUnreadTextTypeface  = titleUnreadTextTypefaceName != null ? Typeface.create(titleUnreadTextTypefaceName, titleUnreadTextStyle) : null;
-        
+
         this.subtitleTextColor = ta.getColor(R.styleable.AtlasConversationList_cellSubtitleTextColor, context.getResources().getColor(R.color.atlas_text_black));
         this.subtitleTextStyle = ta.getInt(R.styleable.AtlasConversationList_cellSubtitleTextStyle, Typeface.NORMAL);
-        String subtitleTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellSubtitleTextTypeface); 
+        String subtitleTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellSubtitleTextTypeface);
         this.subtitleTextTypeface  = subtitleTextTypefaceName != null ? Typeface.create(subtitleTextTypefaceName, subtitleTextStyle) : null;
-        
+
         this.subtitleUnreadTextColor = ta.getColor(R.styleable.AtlasConversationList_cellSubtitleUnreadTextColor, context.getResources().getColor(R.color.atlas_text_black));
         this.subtitleUnreadTextStyle = ta.getInt(R.styleable.AtlasConversationList_cellSubtitleUnreadTextStyle, Typeface.NORMAL);
-        String subtitleUnreadTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellSubtitleUnreadTextTypeface); 
+        String subtitleUnreadTextTypefaceName = ta.getString(R.styleable.AtlasConversationList_cellSubtitleUnreadTextTypeface);
         this.subtitleUnreadTextTypeface  = subtitleUnreadTextTypefaceName != null ? Typeface.create(subtitleUnreadTextTypefaceName, subtitleUnreadTextStyle) : null;
-        
-        this.cellBackgroundColor = ta.getColor(R.styleable.AtlasConversationList_cellBackgroundColor, Color.TRANSPARENT); 
-        this.cellUnreadBackgroundColor = ta.getColor(R.styleable.AtlasConversationList_cellUnreadBackgroundColor, Color.TRANSPARENT); 
-        this.dateTextColor = ta.getColor(R.styleable.AtlasConversationList_dateTextColor, context.getResources().getColor(R.color.atlas_text_black)); 
-        this.avatarTextColor = ta.getColor(R.styleable.AtlasConversationList_avatarTextColor, context.getResources().getColor(R.color.atlas_text_black)); 
+
+        this.cellBackgroundColor = ta.getColor(R.styleable.AtlasConversationList_cellBackgroundColor, Color.TRANSPARENT);
+        this.cellUnreadBackgroundColor = ta.getColor(R.styleable.AtlasConversationList_cellUnreadBackgroundColor, Color.TRANSPARENT);
+        this.dateTextColor = ta.getColor(R.styleable.AtlasConversationList_dateTextColor, context.getResources().getColor(R.color.atlas_text_black));
+        this.avatarTextColor = ta.getColor(R.styleable.AtlasConversationList_avatarTextColor, context.getResources().getColor(R.color.atlas_text_black));
         this.avatarBackgroundColor = ta.getColor(R.styleable.AtlasConversationList_avatarBackgroundColor, context.getResources().getColor(R.color.atlas_shape_avatar_gray));
         ta.recycle();
     }
-    
+
     private void applyStyle() {
         conversationsAdapter.notifyDataSetChanged();
     }
-    
+
     public String formatTime(Date sentAt) {
         if (sentAt == null) sentAt = new Date();
 
@@ -297,10 +352,10 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         long todayMidnight = cal.getTimeInMillis();
         long yesterMidnight = todayMidnight - Tools.TIME_HOURS_24;
         long weekAgoMidnight = todayMidnight - Tools.TIME_HOURS_24 * 7;
-        
+
         String timeText = null;
         if (sentAt.getTime() > todayMidnight) {
-            timeText = timeFormat.format(sentAt.getTime()); 
+            timeText = timeFormat.format(sentAt.getTime());
         } else if (sentAt.getTime() > yesterMidnight) {
             timeText = "Yesterday";
         } else if (sentAt.getTime() > weekAgoMidnight) {
@@ -333,11 +388,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         this.longClickListener = conversationLongClickListener;
     }
 
-    
+
     public interface ConversationClickListener {
         void onItemClick(Conversation conversation);
     }
-    
+
     public interface ConversationLongClickListener {
         void onItemLongClick(Conversation conversation);
     }
@@ -441,6 +496,13 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 textLastMessage.setTextColor(subtitleTextColor);
                 convertView.setBackgroundColor(cellBackgroundColor);
             }
+
+            if(selectedItemsIds.get(position)) {
+                convertView.setBackgroundColor(getResources().getColor(R.color.list_item_activated));
+            } else {
+                convertView.setBackgroundColor(cellBackgroundColor);
+            }
+
             timeView.setTextColor(dateTextColor);
             return convertView;
         }
@@ -453,9 +515,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         public long getItemId(int position) {
             return position;
         }
+
         public Object getItem(int position) {
             return conversations.get(position);
         }
+
         public int getCount() {
             return conversations.size();
         }
@@ -485,5 +549,14 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
             selectedItemsIds = new SparseBooleanArray();
             notifyDataSetChanged();
         }
+    }
+
+    public void setHideNavbar(HideNavbar hideNavbar) {
+        this.hideNavbar = hideNavbar;
+    }
+
+    public static interface HideNavbar {
+        void hideNavbar();
+        void showNavbar();
     }
 }
