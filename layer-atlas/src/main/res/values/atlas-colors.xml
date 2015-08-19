@@ -46,5 +46,7 @@
 
     <!-- menu item background -->
     <color name="atlas_menu_item_background_gray">#EDEDED</color>
+    <color name="list_item_activated">#c9e4a142</color>
+    <color name="list_item_pressed">#ffe4a142</color>
 
 </resources>

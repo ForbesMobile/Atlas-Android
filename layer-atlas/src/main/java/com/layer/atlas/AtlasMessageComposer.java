@@ -66,7 +66,8 @@ public class AtlasMessageComposer extends FrameLayout {
     private float textSize;
     private Typeface typeFace;
     private int textStyle;
-    
+    private OnFocus onFocus;
+
     //
     public AtlasMessageComposer(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -146,6 +147,14 @@ public class AtlasMessageComposer extends FrameLayout {
         });
         
         messageText = (EditText) findViewById(R.id.atlas_message_composer_text);
+        messageText.setOnFocusChangeListener(new OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b) {
+                    onFocus.hasFocus();
+                }
+            }
+        });
         messageText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -226,8 +235,16 @@ public class AtlasMessageComposer extends FrameLayout {
         this.conv = conv;
     }
 
+    public void setOnFocus(OnFocus onFocus) {
+        this.onFocus = onFocus;
+    }
+
     public interface Listener {
         boolean beforeSend(Message message);
+    }
+
+    public interface OnFocus {
+        void hasFocus();
     }
     
     private static class MenuItem {
