@@ -48,20 +48,17 @@ import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.layer.atlas.Atlas.Participant;
 import com.layer.atlas.Atlas.Tools;
 import com.layer.sdk.LayerClient;
-import com.layer.sdk.changes.LayerChange;
 import com.layer.sdk.changes.LayerChangeEvent;
 import com.layer.sdk.exceptions.LayerException;
 import com.layer.sdk.listeners.LayerAuthenticationListener;
 import com.layer.sdk.listeners.LayerChangeEventListener;
 import com.layer.sdk.messaging.Conversation;
-import com.layer.sdk.messaging.LayerObject;
 import com.layer.sdk.messaging.Message;
 import com.layer.sdk.messaging.Message.RecipientStatus;
 import com.squareup.picasso.Picasso;
@@ -75,7 +72,7 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     private static final String TAG = AtlasConversationsList.class.getSimpleName();
     private static final boolean debug = false;
 
-    private ListView conversationsList;
+    public ListView conversationsList;
     private ConversationsAdapter conversationsAdapter;
 
     private ArrayList<Conversation> conversations = new ArrayList<Conversation>();
@@ -107,8 +104,9 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
     // date
     private final DateFormat dateFormat;
     private final DateFormat timeFormat;
-
-    private HideNavbar hideNavbar;
+    private AbsListView.MultiChoiceModeListener listener;
+    private MenuItem closeContextualMenu;
+    private ActionMode contextualMenuAction;
 
     public AtlasConversationsList(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -156,7 +154,7 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         });
 
         conversationsList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        conversationsList.setMultiChoiceModeListener(new AbsListView.MultiChoiceModeListener() {
+        listener = new AbsListView.MultiChoiceModeListener() {
             @Override
             public void onItemCheckedStateChanged(ActionMode actionMode, int position, long id, boolean checked) {
                 // Capture total checked items
@@ -171,7 +169,8 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
             @Override
             public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
                 actionMode.getMenuInflater().inflate(R.menu.conversations_menu, menu);
-//                hideNavbar.hideNavbar();
+                contextualMenuAction = actionMode;
+                closeContextualMenu = menu.findItem(R.id.atlas_conversations_menu_delete_one);
                 return true;
             }
 
@@ -221,11 +220,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
             @Override
             public void onDestroyActionMode(ActionMode actionMode) {
+                // Do not reference the action mode. It is null in the closeContextualMenu method.
                 clearChoices();
                 conversationsList.clearChoices();
-//                hideNavbar.showNavbar();
             }
-        });
+        };
+        conversationsList.setMultiChoiceModeListener(listener);
 
         layerClient.registerEventListener(this);
         // clean everything if deathenticated (client will explode on .getConversation())
@@ -544,19 +544,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
         public void toggleSelection(int position) {
             selectView(position, !selectedItemsIds.get(position));
         }
+    }
 
-        public void removeSelection() {
-            selectedItemsIds = new SparseBooleanArray();
-            notifyDataSetChanged();
+    public void closeContextualMenu() {
+        if (contextualMenuAction != null) {
+            contextualMenuAction.finish();
         }
-    }
-
-    public void setHideNavbar(HideNavbar hideNavbar) {
-        this.hideNavbar = hideNavbar;
-    }
-
-    public static interface HideNavbar {
-        void hideNavbar();
-        void showNavbar();
     }
 }
