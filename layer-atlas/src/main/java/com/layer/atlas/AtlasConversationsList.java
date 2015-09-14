@@ -272,6 +272,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
             List<Conversation> convs = layerClient.getConversations();
             if (debug) Log.d(TAG, "updateValues() conv: " + convs.size());
+
+            if (convs == null || convs.size() == 0) {
+                return;
+            }
+
             for (Conversation conv : convs) {
                 // no participants means we are removed from conversation (disconnected conversation)
                 if (conv.getParticipants().size() == 0) continue;
