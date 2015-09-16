@@ -418,9 +418,11 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
             Uri convId = conversations.get(position).getId();
             Conversation conv = layerClient.getConversation(convId);
+
             if(conv == null) {
                 return convertView;
             }
+
             ArrayList<String> allButMe = new ArrayList<String>(conv.getParticipants());
             allButMe.remove(layerClient.getAuthenticatedUserId());
 
@@ -439,6 +441,9 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
                 ((GradientDrawable) avatarSingleImage.getBackground()).setColor(avatarBackgroundColor);
                 avatarSingle.setVisibility(View.VISIBLE);
                 avatarMulti.setVisibility(View.GONE);
+                if (participant == null) {
+                    return convertView;
+                }
                 Picasso.with(getContext()).load(participant.getImageUrl()).into(avatarSingleImage);
 
             } else {
