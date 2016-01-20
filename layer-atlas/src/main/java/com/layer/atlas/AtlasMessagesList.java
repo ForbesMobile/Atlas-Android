@@ -213,7 +213,10 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     Atlas.Participant participant = participantProvider.getParticipant(userId);
                     String displayText = participant != null ? Atlas.getInitials(participant) : "";
                     imageAvatar.setVisibility(View.VISIBLE);
-                    Picasso.with(getContext()).load(participant.getImageUrl()).into(imageAvatar);
+                    if(participant != null && participant.getImageUrl() != null) {
+                        Picasso.with(getContext()).load(participant.getImageUrl()).into(imageAvatar);
+                    }
+
                 }
                 
                 // mark unsent messages

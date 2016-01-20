@@ -464,9 +464,12 @@ public class AtlasConversationsList extends FrameLayout implements LayerChangeEv
 
                 ImageView textInitialsLeft = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_left);
                 ImageView textInitialsRight = (ImageView) convertView.findViewById(R.id.atlas_view_conversations_list_convert_avatar_multi_right);
-                Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
-                Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
-
+                if(leftParticipant != null && leftParticipant.getImageUrl() != null) {
+                    Picasso.with(getContext()).load(leftParticipant.getImageUrl()).into(textInitialsLeft);
+                }
+                if(rightParticipant != null && rightParticipant.getImageUrl() != null) {
+                    Picasso.with(getContext()).load(rightParticipant.getImageUrl()).into(textInitialsRight);
+                }
                 avatarSingle.setVisibility(View.GONE);
                 avatarMulti.setVisibility(View.VISIBLE);
             }
