@@ -43,6 +43,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -213,7 +214,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
                     Atlas.Participant participant = participantProvider.getParticipant(userId);
                     String displayText = participant != null ? Atlas.getInitials(participant) : "";
                     imageAvatar.setVisibility(View.VISIBLE);
-                    if(participant != null && participant.getImageUrl() != null) {
+                    if(participant != null && !TextUtils.isEmpty(participant.getImageUrl())) {
                         Picasso.with(getContext()).load(participant.getImageUrl()).into(imageAvatar);
                     }
 
