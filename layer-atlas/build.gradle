@@ -9,6 +9,43 @@ android {
         targetSdkVersion 14
     }
 
+    defaultPublishConfig "under30Release"
+    publishNonDefault true
+    productFlavors {
+        under30 {
+            resValue "color", "navigation_bar_bg_color", "#000000"
+            resValue "color", "navigation_bar_foreground_element_color", "#ffffff"
+            resValue "color", "general_accent_color", "#CF9642"
+            resValue "color", "detail_text_color", "#ffffff"
+            resValue "color", "detail_bold_text_color", "#ffffff"
+            resValue "color", "detail_background_color", "#181818"
+        }
+        ypfp {
+            resValue "color", "navigation_bar_bg_color", "#3058A6"
+            resValue "color", "navigation_bar_foreground_element_color", "#ffffff"
+            resValue "color", "general_accent_color", "#D2A840"
+            resValue "color", "detail_text_color", "#737373"
+            resValue "color", "detail_bold_text_color", "#000000"
+            resValue "color", "detail_background_color", "#F6F9FB"
+        }
+        ashoka {
+            resValue "color", "navigation_bar_bg_color", "#032B4D"
+            resValue "color", "navigation_bar_foreground_element_color", "#ffffff"
+            resValue "color", "general_accent_color", "#C14210"
+            resValue "color", "detail_text_color", "#737373"
+            resValue "color", "detail_bold_text_color", "#000000"
+            resValue "color", "detail_background_color", "#F6F9FB"
+        }
+        magnises {
+            resValue "color", "navigation_bar_bg_color", "#31363F"
+            resValue "color", "navigation_bar_foreground_element_color", "#ffffff"
+            resValue "color", "general_accent_color", "#F5CD44"
+            resValue "color", "detail_text_color", "#737373"
+            resValue "color", "detail_bold_text_color", "#000000"
+            resValue "color", "detail_background_color", "#F6F9FB"
+        }
+    }
+
     lintOptions {
         abortOnError false
     }

@@ -33,6 +33,7 @@
     <color name="atlas_background_blue_dark">#198BB8</color>
     <color name="atlas_background_gray">#EBEBEB</color>
     <color name="atlas_background_transparent">#00FFFFFF</color>
+    <color name="atlas_background_other_grey">#AAAAAA</color>
 
     <color name="atlas_qr_mask">#80000000</color>
     <color name="atlas_qr_laser">#FF2196F3</color>
