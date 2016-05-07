@@ -313,13 +313,17 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
         this.otherTextTypeface  = otherTextTypefaceName != null ? Typeface.create(otherTextTypefaceName, otherTextStyle) : null;
         //this.otherTextSize = ta.getDimension(R.styleable.AtlasMessageList_theirTextSize, context.getResources().getDimension(R.dimen.atlas_text_size_general));
         
-        this.myBubbleColor  = ta.getColor(R.styleable.AtlasMessageList_myBubbleColor, context.getResources().getColor(R.color.general_accent_color));
+        this.myBubbleColor  = ta.getColor(R.styleable.AtlasMessageList_myBubbleColor, getResources().getColor(R.color.atlas_bubble_gold));
         this.otherBubbleColor = ta.getColor(R.styleable.AtlasMessageList_theirBubbleColor, context.getResources().getColor(R.color.atlas_background_other_grey));
 
         this.dateTextColor = ta.getColor(R.styleable.AtlasMessageList_dateTextColor, context.getResources().getColor(R.color.atlas_text_gray)); 
         this.avatarTextColor = ta.getColor(R.styleable.AtlasMessageList_avatarTextColor, context.getResources().getColor(R.color.atlas_text_black)); 
         this.avatarBackgroundColor = ta.getColor(R.styleable.AtlasMessageList_avatarBackgroundColor, context.getResources().getColor(R.color.atlas_background_gray));
         ta.recycle();
+    }
+
+    public void setMyBubbleColor(int color){
+        this.myBubbleColor = color;
     }
     
     private void applyStyle() {
@@ -546,7 +550,7 @@ public class AtlasMessagesList extends FrameLayout implements LayerChangeEventLi
             refreshHandler.removeMessages(MESSAGE_TYPE_UPDATE_VALUES);
             final android.os.Message message = refreshHandler.obtainMessage();
             message.arg1 = updateValues ? MESSAGE_REFRESH_UPDATE_ALL : MESSAGE_REFRESH_UPDATE_DELIVERY;
-            message.arg2 = jumpToBottom ? 1 : 0; 
+            message.arg2 = jumpToBottom ? 1 : 0;
             message.obj  = event.getClient();
             refreshHandler.sendMessage(message);
         }
